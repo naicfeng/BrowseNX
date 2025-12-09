@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <locale.h>
 
 // Include the main libnx system header, for Switch development
 #include <switch.h>
@@ -34,11 +33,11 @@ void showError(char* errorText1, char* errorText2, Result outrc)
 
 SwkbdTextCheckResult validate_text(char* tmp_string, size_t tmp_string_size) {
     if (strncmp(tmp_string, "https://", 8) !=0 && strncmp(tmp_string, "http://", 7) !=0) {
-        strncpy(tmp_string, "请在网址前添加 'https://' 或 'http://'", tmp_string_size);
+        strncpy(tmp_string, "Add 'https://' or 'http://' to url", tmp_string_size);
         return SwkbdTextCheckResult_Bad;
     }
     if(strlen(tmp_string) < 12) {
-        strncpy(tmp_string, "网址无效", tmp_string_size);
+        strncpy(tmp_string, "URL too short to be valid", tmp_string_size);
         return SwkbdTextCheckResult_Bad;
     }
     static const char *allowed=":/.%0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -46,7 +45,7 @@ SwkbdTextCheckResult validate_text(char* tmp_string, size_t tmp_string_size) {
     while(*tmp_string)
     {
         if(strchr(allowed, *tmp_string) == NULL){
-            strncpy(reset, "请从网址中删除无效的字符", tmp_string_size);
+            strncpy(reset, "Remove special characters from URL", tmp_string_size);
             return SwkbdTextCheckResult_Bad;
         }
         tmp_string++;
@@ -76,10 +75,10 @@ int showKeyboard(char out[0xc00], char* title, char* placehold, char* oktxt, cha
                 return 0;
             }
         }else if(rc != (Result) 0x5d59) {
-            showError("软件键盘错误\n查看错误代码以获取更多信息", "", rc);
+            showError("Software Keyboard Error\nLookup errorcode for more info", "", rc);
         }
     }else{
-        showError("软件键盘错误\n查看错误代码以获取更多信息", "", rc);
+        showError("Software Keyboard Error\nLookup errorcode for more info", "", rc);
     }
     swkbdClose(&kbd);
     return -1;
@@ -92,13 +91,12 @@ void startAuthApplet(char* url) {
     WebWifiReturnValue out;
     rc = webWifiShow(&config, &out);
     if(R_FAILED(rc)) {
-        showError("浏览器错误\n查看错误代码以获取更多信息", "", rc);
+        showError("Browser Error\nLookup errorcode for more info", "", rc);
     }
 }
 
 int main(int argc, char* argv[])
 {
-    setlocale(LC_ALL, "C.UTF-8");  // 或 setlocale(LC_ALL, "");
     Result rc=0;
     int i = 0;
     char url[0xc00] = {0};
@@ -111,10 +109,10 @@ int main(int argc, char* argv[])
     padInitializeDefault(&pad);
 
     strcpy(url, "https://cuojue.org");
-    printf("按 [L] 选择网址\n");
-    printf("按 [R] 设置默认网址\n");
-    printf("按 [X] 重置默认网址\n");
-    printf("按 [-] 以认证程序方式启动 " CONSOLE_RED "(功能有限)");
+    printf("Press [L] to choose url\n");
+    printf("Press [R] to set default url\n");
+    printf("Press [X] to reset default url\n");
+    printf("Press [-] to launch as auth applet " CONSOLE_RED "(LIMITED FEATURES)");
     bool nagOn;
     nsvmNeedsUpdateVulnerability(&nagOn);
     if(nagOn) {
@@ -127,14 +125,14 @@ int main(int argc, char* argv[])
         while (i <= pCount-1) {
             pminfoGetProgramId(&cId, pids[i]);
             if(cId == 0x00FF747765616BFF || cId == 0x01FF415446660000) {
-                printf(CONSOLE_GREEN "Supernag 已启用，但已通过 switch-sys-tweak 修补！\n");
+                printf(CONSOLE_GREEN "Supernag enabled, but patched via switch-sys-tweak!\n");
                 isPatched = true;
                 break;
             }
             i++;
         }
         if(!isPatched){
-            showError("错误：Nag 已激活，请查看更多详情", "浏览器在 Nag 激活时无法启动\n\n请使用 gagorder 或 switch-sys-tweak（后者随 BrowseNX 一起捆绑）来禁用 Nag。", 0);
+            showError("Error: Nag active, check more details", "Browser won't launch if supernag is active\n\nUse gagorder or switch-sys-tweak (the latter is bundled with BrowseNX) to disable supernag.", 0);
         }
     }
     bool forceAuth = false;
@@ -182,7 +180,7 @@ int main(int argc, char* argv[])
         if(validate_text(fURL, 0xc00) == SwkbdTextCheckResult_OK) {
             strcpy(url, fURL);
         }else{
-            showError("默认网址文件错误，请查看更多详情", fURL, 0);
+            showError("Default URL file error, check more details", fURL, 0);
         }
     }
     if(appletGetAppletType() == AppletType_Application && !forceAuth) { // Running as a title
@@ -190,16 +188,16 @@ int main(int argc, char* argv[])
         WebCommonReply out;
         rc = webPageCreate(&conf, url);
         if (R_FAILED(rc))
-            showError("浏览器启动错误\n查看错误代码以获取更多信息", "", rc);
+            showError("Error starting Browser\nLookup error code for more info", "", rc);
         webConfigSetJsExtension(&conf, true);
         webConfigSetPageCache(&conf, true);
         webConfigSetBootLoadingIcon(&conf, true);
         webConfigSetWhitelist(&conf, ".*");
         rc = webConfigShow(&conf, &out);
         if (R_FAILED(rc))
-            showError("浏览器启动错误\n查看错误代码以获取更多信息", "", rc);
+            showError("Error starting Browser\nLookup error code for more info", "", rc);
     } else { // Running under applet
-        showError("以程序模式运行\n请通过在应用程序（例如游戏）上按住 R 键启动 hbmenu，而不是在小程序（例如图库）上启动", "", 0);
+        showError("Running in applet mode\nPlease launch hbmenu by holding R on an APP (e.g. a game) NOT an applet (e.g. Gallery)", "", 0);
     }
     return 0;
 }
