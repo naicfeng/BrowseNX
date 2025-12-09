@@ -35,8 +35,6 @@ jobs:
     - name: Build
       run: |
         export DEVKITPRO=/opt/devkitpro
-        git config --global --add safe.directory `pwd`
-        git submodule update --remote
         make -j $(nproc)
 
     - name: Upload artifacts
@@ -45,5 +43,6 @@ jobs:
         draft: false
         prerelease: false
         generate_release_notes: yes
+        tag_name: Draft
         files: |
             Browser.nro
