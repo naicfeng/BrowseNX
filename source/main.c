@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 
 // Include the main libnx system header, for Switch development
 #include <switch.h>
@@ -97,6 +98,7 @@ void startAuthApplet(char* url) {
 
 int main(int argc, char* argv[])
 {
+    setlocale(LC_ALL, "C.UTF-8");  // 或 setlocale(LC_ALL, "");
     Result rc=0;
     int i = 0;
     char url[0xc00] = {0};
